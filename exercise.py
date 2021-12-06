@@ -22,7 +22,7 @@ import re
 from tqdm import tqdm
 
 # bioninformatics specific tools
-import Bio
+from Bio import SeqIO
 
 
 class Exercise1:
@@ -31,14 +31,22 @@ class Exercise1:
         """
         Initialize exercise object with string that will be searched
         """
-        with open(string_path, 'r') as file:
-            self.string = file.read().replace('\n', '')
+        if string_path.endswith('.txt'):
+            with open(string_path, 'r') as file:
+                self.string = file.read().replace('\n', '')
+        else:
+            self.string = SeqIO.read(string_path, "fasta")
+        
+        self.benchmarks={'find':[],'fm':[]}
 
     def find_simple(self,pattern_path):
         """
         This function searches for a pattern in a string using the find string method,
         we expect slow performance from this function
         """
+        self.pattern = SeqIO.read(pattern_path, "fasta")
+        logging.info(f"Found pattern occurrence at {string.find(self.pattern, string[0], string[-1])}")
+        return string.find(self.pattern, string[0], string[-1])
         
     def fm_index(self):
         """
@@ -52,23 +60,24 @@ class Exercise1:
     
 
 if __name__ == "__main__":
+    # get start time of the script:
+    start = time.time()
+
     
     # script arguments    
     if len(sys.argv) > 1:
         string_file = sys.argv[1]
-        pattern = sys.argv[2]
+        pattern_file = sys.argv[2]
     else:
-        string_file = 'Hello world'
-        pattern = 'Hello'
+        string_file = 'simple_string.txt'
+        pattern_file = 'simple_pattern.txt'
     
     # --------Specify paths--------------------------
     # Specify input directories and input files
     wdir = os.getcwd() # working directory (github repo)
     ddir = os.path.join(wdir,'data') # data directory
-    simple_string = os.path.join(ddir,'simple_string.txt')
-    simple_pattern = os.path.join(ddir,'simple_pattern.txt')
-    exercise_string = os.path.join(ddir,'sampled_illumina_reads.fasta')
-    exercise_pattern = os.path.join(ddir,'text.dna4.short.fasta')
+    exercise_string = os.path.join(ddir,string_file)
+    exercise_pattern = os.path.join(ddir,pattern_file)
     ldir = os.path.join(wdir,'logs') # logs directory
 
 
@@ -85,8 +94,25 @@ if __name__ == "__main__":
     logging.info(f"Operating system: {sys.platform}\n")
     logging.info('')
 
-    # ---------Start exercise (simple)------------------------------
-    Ex = Exercise1(simple_string)
+    # ---------Start exercise (simple)-------------------------------
+    Ex = Exercise1(exercise_string)
+
+    start_simple = time.time()
+    Ex.find_simple(exercise_pattern) 
+    end_simple = time.time()
+    time_simple = (end_simple-start_simple)/60 # time in minutes
+    
+    # ---------Start exercise (complex)------------------------------
+
+    # ---------End exercise -----------------------------------------
+    end = time.time()
+    total_time = (end - start) / 60
+    logging.info('------Stop logging------')
+    logging.info('total running time: %0.2f minutes' % total_time)
+    logging.shutdown()
+
+
+
 
 
 
