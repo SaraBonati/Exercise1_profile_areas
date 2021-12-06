@@ -35,7 +35,10 @@ class Exercise1:
             with open(string_path, 'r') as file:
                 self.string = file.read().replace('\n', '')
         else:
-            self.string = SeqIO.read(string_path, "fasta")
+            self.string = next(SeqIO.parse(exercise_string,'fasta'))
+            logging.info(f'string id: {self.string.id}')
+            logging.info(f'string length: {len(self.string)}')
+
         
         self.benchmarks={'find':[],'fm':[]}
 
@@ -44,9 +47,11 @@ class Exercise1:
         This function searches for a pattern in a string using the find string method,
         we expect slow performance from this function
         """
-        self.pattern = SeqIO.read(pattern_path, "fasta")
-        logging.info(f"Found pattern occurrence at {string.find(self.pattern, string[0], string[-1])}")
-        return string.find(self.pattern, string[0], string[-1])
+        self.pattern = next(SeqIO.read(pattern_path, "fasta"))
+        logging.info(f'pattern id: {self.pattern.id}')
+        logging.info(f'pattern length: {len(self.pattern)}')
+        logging.info(f"Found pattern occurrence at {string.find(self.pattern, self.string.seq[0], self.string.seq[-1])}")
+        return string.find(self.pattern, self.string.seq[0], self.string.seq[-1])
         
     def fm_index(self):
         """
@@ -95,6 +100,7 @@ if __name__ == "__main__":
     logging.info('')
 
     # ---------Start exercise (simple)-------------------------------
+    logging.info("------Start loading chromosome 1 (long string)------")
     Ex = Exercise1(exercise_string)
 
     start_simple = time.time()
