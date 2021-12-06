@@ -27,7 +27,7 @@ from Bio import SeqIO
 
 class Exercise1:
 
-    def __init__(self,string_path):
+    def __init__(self,string_path,pattern_path):
         """
         Initialize exercise object with string that will be searched
         """
@@ -35,23 +35,28 @@ class Exercise1:
             with open(string_path, 'r') as file:
                 self.string = file.read().replace('\n', '')
         else:
-            self.string = next(SeqIO.parse(exercise_string,'fasta'))
+            
+            self.string = next(SeqIO.parse(string_path,'fasta')) # one unique record, 1 chromosome
+            logging.info("------Chromosome 1 (long string) loaded!------")
             logging.info(f'string id: {self.string.id}')
             logging.info(f'string length: {len(self.string)}')
 
+            self.patterns = list(SeqIO.parse(pattern_path, "fasta")) # multiple search patterns, 100000 records to be precise
+            logging.info("------Patterns loaded!------")
+            logging.info(f'Number of patterns: {len(self.patterns)}')
         
-        self.benchmarks={'find':[],'fm':[]}
+        self.benchmarks={'find':{},'fm':{}}
 
-    def find_simple(self,pattern_path):
+    def find_simple(self,reads):
         """
         This function searches for a pattern in a string using the find string method,
         we expect slow performance from this function
         """
-        self.pattern = next(SeqIO.read(pattern_path, "fasta"))
-        logging.info(f'pattern id: {self.pattern.id}')
-        logging.info(f'pattern length: {len(self.pattern)}')
-        logging.info(f"Found pattern occurrence at {string.find(self.pattern, self.string.seq[0], self.string.seq[-1])}")
-        return string.find(self.pattern, self.string.seq[0], self.string.seq[-1])
+        index_found = []
+        for n in tqdm(range(reads)):
+            index_found.append(self.string.seq.find(self.patterns[n].seq))  
+        logging.info(f"For {reads} reads found pattern occurrence at {index_found}")
+        return index_found
         
     def fm_index(self):
         """
@@ -67,7 +72,6 @@ class Exercise1:
 if __name__ == "__main__":
     # get start time of the script:
     start = time.time()
-
     
     # script arguments    
     if len(sys.argv) > 1:
@@ -80,7 +84,9 @@ if __name__ == "__main__":
     # --------Specify paths--------------------------
     # Specify input directories and input files
     wdir = os.getcwd() # working directory (github repo)
+    print(wdir)
     ddir = os.path.join(wdir,'data') # data directory
+    print(ddir)
     exercise_string = os.path.join(ddir,string_file)
     exercise_pattern = os.path.join(ddir,pattern_file)
     ldir = os.path.join(wdir,'logs') # logs directory
@@ -101,12 +107,16 @@ if __name__ == "__main__":
 
     # ---------Start exercise (simple)-------------------------------
     logging.info("------Start loading chromosome 1 (long string)------")
-    Ex = Exercise1(exercise_string)
-
-    start_simple = time.time()
-    Ex.find_simple(exercise_pattern) 
-    end_simple = time.time()
-    time_simple = (end_simple-start_simple)/60 # time in minutes
+    Ex = Exercise1(exercise_string,exercise_pattern)
+    
+    reads = [100, 500, 1000, 5000, 10000]
+    for r in reads:
+        start_simple = time.time()
+        Ex.find_simple(r) 
+        end_simple = time.time()
+        time_simple = (end_simple-start_simple)/60 # time in minutes
+        Ex.benchmarks['find'][r]=np.round((end_simple-start_simple)/60,3)
+        logging.info(f'For {reads} reads the total runnng time is {np.round((end_simple-start_simple)/60,3)} minutes')
     
     # ---------Start exercise (complex)------------------------------
 
