@@ -1,4 +1,8 @@
 # Exercise 1 code (group: Skywalkers)
+
+# possible links: https://pypi.org/project/shellinford/ (to create or use fm index)
+# to load fasta data: https://www.biostars.org/p/710/ 
+# for helper function sin python: https://nbviewer.org/gist/BenLangmead/6798379
 #----------------------------------------------------------
 # general utility import
 import numpy as np
@@ -60,12 +64,12 @@ if __name__ == "__main__":
     # --------Specify paths--------------------------
     # Specify input directories and input files
     wdir = os.getcwd() # working directory (github repo)
-    ddir = os.path.join() # data directory
-    simple_string = 
-    simple_pattern = 
-    exercise_string = 
-    exercise_pattern = 
-    ldir = os.path.join() # logs directory
+    ddir = os.path.join(wdir,'data') # data directory
+    simple_string = os.path.join(ddir,'simple_string.txt')
+    simple_pattern = os.path.join(ddir,'simple_pattern.txt')
+    exercise_string = os.path.join(ddir,'sampled_illumina_reads.fasta')
+    exercise_pattern = os.path.join(ddir,'text.dna4.short.fasta')
+    ldir = os.path.join(wdir,'logs') # logs directory
 
 
     # -------Set-up logging---------------------
