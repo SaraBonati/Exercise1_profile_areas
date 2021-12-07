@@ -1,5 +1,5 @@
 # ignore all logs
-**/logs
+logs/
 
 # ignore pycache
-**/__pycache__
+__pycache__/
