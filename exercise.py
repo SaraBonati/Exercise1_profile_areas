@@ -130,20 +130,27 @@ if __name__ == "__main__":
     
     # exercise parameters and result storage
     reads = [100, 500, 1000]#, 5000, 10000]
-    results_simple = {}
+    position_results_simple = {}
+    memory_results_simple = {}
     
     for r in reads:
         start_simple = time.time()
-        results_simple[r] = Ex.find_simple(r) 
+        position_results_simple[r] = Ex.find_simple(r) 
         end_simple = time.time()
+
+        memory_results_simple[r] = memory_usage((Ex.find_simple,(r,))) 
 
         time_simple = (end_simple-start_simple)/60 # time in minutes
         Ex.benchmarks['find'][r]=np.round((end_simple-start_simple)/60,3)
         logging.info(f'For {reads} reads the total runnng time is {np.round((end_simple-start_simple)/60,3)} minutes')
     
     # save position results
-    with open(os.path.join(rdir,'positions_simplefind_results.pickle'), 'wb') as handle:
-        pickle.dump(results_simple, handle, protocol=pickle.HIGHEST_PROTOCOL)
+    with open(os.path.join(rdir,'positions_simplefind_time_results.pickle'), 'wb') as handle:
+        pickle.dump(position_results_simple, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+    # save memory results
+    with open(os.path.join(rdir,'memory_simplefind_time_results.pickle'), 'wb') as handle:
+        pickle.dump(memory_results_simple, handle, protocol=pickle.HIGHEST_PROTOCOL)
     
     # ---------Start exercise (complex)------------------------------
 
