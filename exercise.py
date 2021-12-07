@@ -19,7 +19,9 @@ import pickle
 import itertools
 import json
 import re
+import pickle
 from tqdm import tqdm
+from memory_profiler import memory_usage
 
 # bioninformatics specific tools
 from Bio import SeqIO
@@ -55,7 +57,7 @@ class Exercise1:
         index_found = []
         for n in tqdm(range(reads)):
             index_found.append(self.string.seq.find(self.patterns[n].seq))  
-        logging.info(f"For {reads} reads found pattern occurrence at {index_found}")
+        logging.info(f"For {reads} reads found {len(index_found)} pattern occurrences")
         return index_found
         
     def fm_index(self):
@@ -68,6 +70,22 @@ class Exercise1:
         This function searches for a query pattern in the fm index previously saved
         """
     
+
+    def plot_time_benchmarks(self):
+        """
+        This function plots the time benchmarks of the pattern search for find method and fm index
+        """
+        # define figure
+        fig = plt.figure(figsize=(18,9))
+        gs = gridspec.GridSpec(1,1)
+        ax = {}
+
+        ax[0] = fig.add_subplot(gs[0,0])
+        ax[0].bar()
+        # to be continued....
+
+#-------------------------------------------------------------------
+#-------------------------------------------------------------------
 
 if __name__ == "__main__":
     # get start time of the script:
@@ -90,6 +108,7 @@ if __name__ == "__main__":
     exercise_string = os.path.join(ddir,string_file)
     exercise_pattern = os.path.join(ddir,pattern_file)
     ldir = os.path.join(wdir,'logs') # logs directory
+    rdir = os.path.join(wdir,'results') # results directory
 
 
     # -------Set-up logging---------------------
@@ -109,14 +128,22 @@ if __name__ == "__main__":
     logging.info("------Start loading chromosome 1 (long string)------")
     Ex = Exercise1(exercise_string,exercise_pattern)
     
-    reads = [100, 500, 1000, 5000, 10000]
+    # exercise parameters and result storage
+    reads = [100, 500, 1000]#, 5000, 10000]
+    results_simple = {}
+    
     for r in reads:
         start_simple = time.time()
-        Ex.find_simple(r) 
+        results_simple[r] = Ex.find_simple(r) 
         end_simple = time.time()
+
         time_simple = (end_simple-start_simple)/60 # time in minutes
         Ex.benchmarks['find'][r]=np.round((end_simple-start_simple)/60,3)
         logging.info(f'For {reads} reads the total runnng time is {np.round((end_simple-start_simple)/60,3)} minutes')
+    
+    # save position results
+    with open(os.path.join(rdir,'positions_simplefind_results.pickle'), 'wb') as handle:
+        pickle.dump(results_simple, handle, protocol=pickle.HIGHEST_PROTOCOL)
     
     # ---------Start exercise (complex)------------------------------
 
