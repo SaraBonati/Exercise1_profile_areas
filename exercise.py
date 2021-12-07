@@ -22,6 +22,7 @@ import re
 import pickle
 from tqdm import tqdm
 from memory_profiler import memory_usage
+import shellinford
 
 # bioninformatics specific tools
 from Bio import SeqIO
@@ -60,16 +61,22 @@ class Exercise1:
         logging.info(f"For {reads} reads found {len(index_found)} pattern occurrences")
         return index_found
         
-    def fm_index(self):
+    def fm_index(self,file_path):
         """
         This function returns the fm index of the input string and saves it in a separate file
         """
+        self.fm = shellinford.FMIndex()
+        self.fm.build(self.string.seq, file_path)
 
-    def search_fm_index(self,query):
+    def search_fm_index(self,reads):
         """
         This function searches for a query pattern in the fm index previously saved
         """
-    
+        for n in tqdm(range(reads)):
+            for doc in self.fm.search(self.patterns[0].seq):
+                logging.info('doc_id:', doc.doc_id)
+                logging.info('count:', doc.count)
+                logging.info('text:', doc.text)
 
     def plot_time_benchmarks(self):
         """
@@ -129,7 +136,7 @@ if __name__ == "__main__":
     Ex = Exercise1(exercise_string,exercise_pattern)
     
     # exercise parameters and result storage
-    reads = [100, 500, 1000]#, 5000, 10000]
+    reads = [100, 500]#, 5000, 10000]
     position_results_simple = {}
     memory_results_simple = {}
     
@@ -142,7 +149,7 @@ if __name__ == "__main__":
 
         time_simple = (end_simple-start_simple)/60 # time in minutes
         Ex.benchmarks['find'][r]=np.round((end_simple-start_simple)/60,3)
-        logging.info(f'For {reads} reads the total runnng time is {np.round((end_simple-start_simple)/60,3)} minutes')
+        logging.info(f'For {reads} reads the total running time is {np.round((end_simple-start_simple)/60,3)} minutes')
     
     # save position results
     with open(os.path.join(rdir,'positions_simplefind_time_results.pickle'), 'wb') as handle:
@@ -153,6 +160,35 @@ if __name__ == "__main__":
         pickle.dump(memory_results_simple, handle, protocol=pickle.HIGHEST_PROTOCOL)
     
     # ---------Start exercise (complex)------------------------------
+    # make fm index file
+    create_fm_start = time.time()
+    Ex.fm_index(os.path.join(rdir,'fm_index.fm'))
+    create_fm_end = time.time()
+    logging.info(f'For creating FM index the total running time is {np.round((create_fm_end-create_fm_start)/60,3)} minutes')
+
+    reads = [100, 500, 1000]#, 5000, 10000]
+    position_results_fm = {}
+    memory_results_fm = {}
+    
+    for r in reads:
+        start_simple = time.time()
+        position_results_fm[r] = Ex.search_fm_index(r) 
+        end_simple = time.time()
+
+        memory_results_fm[r] = memory_usage((Ex.search_fm_index,(r,))) 
+
+        time_simple = (end_simple-start_simple)/60 # time in minutes
+        Ex.benchmarks['fm'][r]=np.round((end_simple-start_simple)/60,3)
+        logging.info(f'(fm index) For {reads} reads the total running time is {np.round((end_simple-start_simple)/60,3)} minutes')
+    
+    # save position results
+    with open(os.path.join(rdir,'positions_fm_time_results.pickle'), 'wb') as handle:
+        pickle.dump(position_results_fm, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+    # save memory results
+    with open(os.path.join(rdir,'memory_fm_time_results.pickle'), 'wb') as handle:
+        pickle.dump(memory_results_fm, handle, protocol=pickle.HIGHEST_PROTOCOL)
+    
 
     # ---------End exercise -----------------------------------------
     end = time.time()

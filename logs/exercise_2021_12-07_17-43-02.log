@@ -1,0 +1,17 @@
+07/12/2021 17:43:02 ------Start Running exercise.py------
+07/12/2021 17:43:02 Operating system: win32
+
+07/12/2021 17:43:02 
+07/12/2021 17:43:02 ------Start loading chromosome 1 (long string)------
+07/12/2021 17:43:02 ------Chromosome 1 (long string) loaded!------
+07/12/2021 17:43:02 string id: NC_000001.11
+07/12/2021 17:43:02 string length: 100000000
+07/12/2021 17:43:03 ------Patterns loaded!------
+07/12/2021 17:43:03 Number of patterns: 100000
+07/12/2021 17:43:22 For 100 reads found 100 pattern occurrences
+07/12/2021 17:43:41 For 100 reads found 100 pattern occurrences
+07/12/2021 17:43:41 For [100, 500] reads the total running time is 0.309 minutes
+07/12/2021 17:45:17 For 500 reads found 500 pattern occurrences
+07/12/2021 17:46:54 For 500 reads found 500 pattern occurrences
+07/12/2021 17:46:54 For [100, 500] reads the total running time is 1.598 minutes
+07/12/2021 17:50:25 For creating FM index the total running time is 3.528 minutes
