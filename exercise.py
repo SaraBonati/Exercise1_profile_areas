@@ -57,8 +57,8 @@ class Exercise1:
         """
         index_found = []
         for n in tqdm(range(reads)):
-            index_found.append(self.string.seq.find(self.patterns[n].seq))  
-        logging.info(f"For {reads} reads found {len(index_found)} pattern occurrences")
+            index_found.append(str(self.string.seq).find(str(self.patterns[n].seq)))  
+        #logging.info(f"For {reads} reads found {len(index_found)} pattern occurrences")
         return index_found
         
     def fm_index(self,file_path):
@@ -68,28 +68,89 @@ class Exercise1:
         self.fm = shellinford.FMIndex()
         self.fm.build(self.string.seq, file_path)
 
-    def search_fm_index(self,reads):
+    def search_fm_index(self,reads,make_index=False):
         """
         This function searches for a query pattern in the fm index previously saved
         """
+        if make_index:
+            startfm = time.time()
+            self.fm = shellinford.FMIndex()
+            self.fm.build(str(self.string.seq))
+            endfm = time.time()
+            logging.info(f'for fm index time : {np.round((endfm-startfm)/60,3)}')
+        
+        start = time.time()
         for n in tqdm(range(reads)):
-            for doc in self.fm.search(self.patterns[0].seq):
-                logging.info('doc_id:', doc.doc_id)
-                logging.info('count:', doc.count)
-                logging.info('text:', doc.text)
+            for doc in self.fm.search(str(self.patterns[n].seq)):
+                logging.info(f'doc_count: {doc.count}')
+                #print('count:', doc.count)
+                #print('text:', doc.text)
+        end = time.time()
+        logging.info(f'{r} reads : {np.round((end-start)/60,3)}')
+        return np.round((end-start)/60,3)
 
     def plot_time_benchmarks(self):
         """
         This function plots the time benchmarks of the pattern search for find method and fm index
         """
+
+        reads = [100]#,500,1000,5000,10000]
+
         # define figure
         fig = plt.figure(figsize=(18,9))
         gs = gridspec.GridSpec(1,1)
         ax = {}
+        
+        x = np.arange(len(reads))  # the label locations
+        width = 0.35  # the width of the bars
 
         ax[0] = fig.add_subplot(gs[0,0])
-        ax[0].bar()
-        # to be continued....
+        ax[0].bar(x - width/2, self.benchmarks['find'], width, label='Find method')
+        ax[0].bar(x + width/2, self.benchmarks['fm'], width, label='FM index')
+        ax[0].set_ylabel('Time (in minutes)')
+        ax[0].set_title('Time benchmarks')
+        ax[0].set_xticks(x, [str(i) for i in reads])
+        ax[0].legend(loc='best')
+        fig.tight_layout()
+        plt.savefig(os.path.join(rdir,'time_plot.pdf'),dpi=300,format='pdf')
+        plt.savefig(os.path.join(rdir,'time_plot.png'),dpi=300,format='png')
+
+
+    def plot_memory_benchmarks(self,memory_results_simple,memory_results_fm):
+        """
+        This function plots the memory benchmarks of the pattern search for find method and fm index
+        """
+        reads = [100]#,500,1000,5000,10000]
+        
+        cmb                 = plt.get_cmap('Blues')                            
+        cmb_subsection      = np.linspace(.3,.9,len(reads))                             
+        colorsb             = [cmb(x) for x in cmb_subsection[::-1]]
+
+        # define figure
+        fig = plt.figure(figsize=(20,12))
+        gs = gridspec.GridSpec(2,1)
+        ax = {}
+
+        ax[0] = fig.add_subplot(gs[0,0])
+        for r in range(len(reads)):
+            ax[0].plot(memory_results_simple[reads[r]],color=colorsb[r],label=f'{reads[r]} reads')
+        ax[0].set_xlabel('Time (s)')
+        ax[0].set_ylabel('Memory consumption (MB)')
+        ax[0].set_title('String find method')
+        ax[0].legend(loc='best')
+
+        ax[1] = fig.add_subplot(gs[1,0])
+        for r in range(len(reads)):
+            ax[1].plot(np.arange(0,100),color=colorsb[r],label=f'{reads[r]} reads')
+        ax[1].set_xlabel('Time (s)')
+        ax[1].set_ylabel('Memory consumption (MB)')
+        ax[1].set_title('FM index')
+        ax[1].legend(loc='best')
+
+        fig.tight_layout()
+        plt.savefig(os.path.join(rdir,'memory_plot.pdf'),dpi=300,format='pdf')
+        plt.savefig(os.path.join(rdir,'memory_plot.png'),dpi=300,format='png')
+        
 
 #-------------------------------------------------------------------
 #-------------------------------------------------------------------
@@ -103,8 +164,8 @@ if __name__ == "__main__":
         string_file = sys.argv[1]
         pattern_file = sys.argv[2]
     else:
-        string_file = 'simple_string.txt'
-        pattern_file = 'simple_pattern.txt'
+        string_file = r'C:\Users\sarab\Desktop\profile_areas_2021\bioinformatics1\data\text.dna4.short.fasta'
+        pattern_file = r'C:\Users\sarab\Desktop\profile_areas_2021\bioinformatics1\data\sampled_illumina_reads.fasta'
     
     # --------Specify paths--------------------------
     # Specify input directories and input files
@@ -136,7 +197,7 @@ if __name__ == "__main__":
     Ex = Exercise1(exercise_string,exercise_pattern)
     
     # exercise parameters and result storage
-    reads = [100, 500]#, 5000, 10000]
+    reads = [100]#,500,1000,5000,10000]#, 5000, 10000]
     position_results_simple = {}
     memory_results_simple = {}
     
@@ -144,11 +205,12 @@ if __name__ == "__main__":
         start_simple = time.time()
         position_results_simple[r] = Ex.find_simple(r) 
         end_simple = time.time()
+        Ex.benchmarks['find'][r]=np.round((end_simple-start_simple)/60,3)
 
         memory_results_simple[r] = memory_usage((Ex.find_simple,(r,))) 
 
-        time_simple = (end_simple-start_simple)/60 # time in minutes
-        Ex.benchmarks['find'][r]=np.round((end_simple-start_simple)/60,3)
+    #    time_simple = (end_simple-start_simple)/60 # time in minutes
+        
         logging.info(f'For {reads} reads the total running time is {np.round((end_simple-start_simple)/60,3)} minutes')
     
     # save position results
@@ -160,36 +222,31 @@ if __name__ == "__main__":
         pickle.dump(memory_results_simple, handle, protocol=pickle.HIGHEST_PROTOCOL)
     
     # ---------Start exercise (complex)------------------------------
-    # make fm index file
-    create_fm_start = time.time()
-    Ex.fm_index(os.path.join(rdir,'fm_index.fm'))
-    create_fm_end = time.time()
-    logging.info(f'For creating FM index the total running time is {np.round((create_fm_end-create_fm_start)/60,3)} minutes')
-
-    reads = [100, 500, 1000]#, 5000, 10000]
-    position_results_fm = {}
+    reads = [100]#,500,1000,5000,10000]
+    time_results_fm = {}
     memory_results_fm = {}
     
     for r in reads:
-        start_simple = time.time()
-        position_results_fm[r] = Ex.search_fm_index(r) 
-        end_simple = time.time()
+        if r==100:
+            Ex.benchmarks['fm'][r] = Ex.search_fm_index(r,True) 
+        else:
+            Ex.benchmarks['fm'][r] = Ex.search_fm_index(r,False) 
 
-        memory_results_fm[r] = memory_usage((Ex.search_fm_index,(r,))) 
-
-        time_simple = (end_simple-start_simple)/60 # time in minutes
-        Ex.benchmarks['fm'][r]=np.round((end_simple-start_simple)/60,3)
-        logging.info(f'(fm index) For {reads} reads the total running time is {np.round((end_simple-start_simple)/60,3)} minutes')
-    
-    # save position results
-    with open(os.path.join(rdir,'positions_fm_time_results.pickle'), 'wb') as handle:
-        pickle.dump(position_results_fm, handle, protocol=pickle.HIGHEST_PROTOCOL)
+    #for r in reads:
+    #    if r==100:
+    #        memory_results_fm[r] = memory_usage(Ex.search_fm_index,(r,))
+    #    else:
+    #        memory_results_fm[r] = memory_usage(Ex.search_fm_index,(r,))
+        
 
     # save memory results
-    with open(os.path.join(rdir,'memory_fm_time_results.pickle'), 'wb') as handle:
+    with open(os.path.join(rdir,'fm_time_results.pickle'), 'wb') as handle:
         pickle.dump(memory_results_fm, handle, protocol=pickle.HIGHEST_PROTOCOL)
     
 
+    #-----------------PLOT-------------------------------------------
+    Ex.plot_time_benchmarks()
+    Ex.plot_memory_benchmarks(memory_results_simple,memory_results_fm)
     # ---------End exercise -----------------------------------------
     end = time.time()
     total_time = (end - start) / 60
