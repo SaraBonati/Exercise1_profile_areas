@@ -27,7 +27,7 @@ import shellinford
 # bioninformatics specific tools
 from Bio import SeqIO
 
-reads = [100, 500] #[100, 500, 1000, 5000, 10_000, 100_000] #, 500_000, 1_000_000]  # [100, 500, 1000, 5000, 10_000, 100_000, 500_000, 1_000_000]
+reads = [10, 50] #[100, 500, 1000, 5000, 10_000, 100_000] #, 500_000, 1_000_000]  # [100, 500, 1000, 5000, 10_000, 100_000, 500_000, 1_000_000]
 
 
 class Exercise1:
@@ -111,11 +111,11 @@ class Exercise1:
         width = 0.35  # the width of the bars
 
         ax[0] = fig.add_subplot(gs[0,0])
-        ax[0].bar(x - width/2, self.benchmarks['find'], width, label='String find method')
-        ax[0].bar(x + width/2, self.benchmarks['fm'], width, label='FM-index')
+        ax[0].bar(x - width/2, list(self.benchmarks['find'].values()), width, label='String find method')
+        ax[0].bar(x + width/2, list(self.benchmarks['fm'].values()), width, label='FM-index')
         ax[0].set_ylabel('Time (minutes)')
         ax[0].set_title('Time benchmarks')
-        #ax[0].set_xticks(x, [str(i) for i in reads])
+        #ax[0].set_xticks(x, list(self.benchmarks['find'].keys()))
         ax[0].legend(loc='best')
         fig.tight_layout()
         plt.savefig(os.path.join(rdir,'time_plot.pdf'),dpi=300,format='pdf')
