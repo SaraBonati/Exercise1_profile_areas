@@ -27,8 +27,7 @@ import shellinford
 # bioninformatics specific tools
 from Bio import SeqIO
 
-reads = [10, 50] #[100, 500, 1000, 5000, 10_000, 100_000] #, 500_000, 1_000_000]  # [100, 500, 1000, 5000, 10_000, 100_000, 500_000, 1_000_000]
-
+reads = [100, 500, 1000, 5000] # [100, 500, 1000, 5000, 10_000, 100_000, 500_000, 1_000_000]
 
 class Exercise1:
     def __init__(self, string_path, pattern_path):
@@ -79,7 +78,7 @@ class Exercise1:
             self.fm = shellinford.FMIndex()
             self.fm.build(str(self.string.seq))
             endfm = time.time()
-            logging.info(f'for fm index time : {np.round((endfm - startfm) / 60, 3)}')
+            logging.info(f'for fm index time : {np.round((endfm - startfm) / 60, 4)}')
 
         start = time.time()
         counts = 0
@@ -92,8 +91,8 @@ class Exercise1:
                 #print('text:', doc.text)
         end = time.time()
         logging.info(f'doc_count: {counts}')
-        logging.info(f'{r} reads : {np.round((end-start)/60,3)}')
-        return np.round((end-start)/60,3)
+        logging.info(f'{r} reads : {np.round((end-start)/60,4)}')
+        return np.round((end-start)/60,4)
 
     def plot_time_benchmarks(self):
         """
@@ -212,14 +211,14 @@ if __name__ == "__main__":
         start_simple = time.time()
         position_results_simple[r] = Ex.find_simple(r)
         end_simple = time.time()
-        Ex.benchmarks['find'][r] = np.round((end_simple - start_simple) / 60, 3)
+        Ex.benchmarks['find'][r] = np.round((end_simple - start_simple) / 60, 4)
 
         memory_results_simple[r] = memory_usage((Ex.find_simple, (r,)))
 
         #    time_simple = (end_simple-start_simple)/60 # time in minutes
 
         logging.info(
-            f'For {reads} reads the total running time is {np.round((end_simple - start_simple) / 60, 3)} minutes')
+            f'For {reads} reads the total running time is {np.round((end_simple - start_simple) / 60, 4)} minutes')
 
     # save position results
     with open(os.path.join(rdir, 'positions_simplefind_time_results.pickle'), 'wb') as handle:
@@ -263,10 +262,6 @@ if __name__ == "__main__":
     logging.shutdown()
 
     print(Ex.benchmarks)
-
-
-
-
-
+    print(memory_results_simple)
 
 
