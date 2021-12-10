@@ -3,7 +3,7 @@
 # possible links: https://pypi.org/project/shellinford/ (to create or use fm index)
 # to load fasta data: https://www.biostars.org/p/710/ 
 # for helper function sin python: https://nbviewer.org/gist/BenLangmead/6798379
-#----------------------------------------------------------
+# ----------------------------------------------------------
 # general utility import
 import numpy as np
 import pandas as pd
@@ -27,10 +27,11 @@ import shellinford
 # bioninformatics specific tools
 from Bio import SeqIO
 
+reads = [100, 500] #[100, 500, 1000, 5000, 10_000, 100_000] #, 500_000, 1_000_000]  # [100, 500, 1000, 5000, 10_000, 100_000, 500_000, 1_000_000]
+
 
 class Exercise1:
-
-    def __init__(self,string_path,pattern_path):
+    def __init__(self, string_path, pattern_path):
         """
         Initialize exercise object with string that will be searched
         """
@@ -38,37 +39,38 @@ class Exercise1:
             with open(string_path, 'r') as file:
                 self.string = file.read().replace('\n', '')
         else:
-            
-            self.string = next(SeqIO.parse(string_path,'fasta')) # one unique record, 1 chromosome
+
+            self.string = next(SeqIO.parse(string_path, 'fasta'))  # one unique record, 1 chromosome
             logging.info("------Chromosome 1 (long string) loaded!------")
             logging.info(f'string id: {self.string.id}')
             logging.info(f'string length: {len(self.string)}')
 
-            self.patterns = list(SeqIO.parse(pattern_path, "fasta")) # multiple search patterns, 100000 records to be precise
+            self.patterns = list(
+                SeqIO.parse(pattern_path, "fasta"))  # multiple search patterns, 100000 records to be precise
             logging.info("------Patterns loaded!------")
             logging.info(f'Number of patterns: {len(self.patterns)}')
-        
-        self.benchmarks={'find':{},'fm':{}}
 
-    def find_simple(self,reads):
+        self.benchmarks = {'find': {}, 'fm': {}}
+
+    def find_simple(self, reads):
         """
         This function searches for a pattern in a string using the find string method,
         we expect slow performance from this function
         """
         index_found = []
         for n in tqdm(range(reads)):
-            index_found.append(str(self.string.seq).find(str(self.patterns[n].seq)))  
-        #logging.info(f"For {reads} reads found {len(index_found)} pattern occurrences")
+            index_found.append(str(self.string.seq).find(str(self.patterns[n].seq)))
+            # logging.info(f"For {reads} reads found {len(index_found)} pattern occurrences")
         return index_found
-        
-    def fm_index(self,file_path):
+
+    def fm_index(self, file_path):
         """
         This function returns the fm index of the input string and saves it in a separate file
         """
         self.fm = shellinford.FMIndex()
         self.fm.build(self.string.seq, file_path)
 
-    def search_fm_index(self,reads,make_index=False):
+    def search_fm_index(self, reads, make_index=False):
         """
         This function searches for a query pattern in the fm index previously saved
         """
@@ -77,15 +79,19 @@ class Exercise1:
             self.fm = shellinford.FMIndex()
             self.fm.build(str(self.string.seq))
             endfm = time.time()
-            logging.info(f'for fm index time : {np.round((endfm-startfm)/60,3)}')
-        
+            logging.info(f'for fm index time : {np.round((endfm - startfm) / 60, 3)}')
+
         start = time.time()
+        counts = 0
         for n in tqdm(range(reads)):
             for doc in self.fm.search(str(self.patterns[n].seq)):
-                logging.info(f'doc_count: {doc.count}')
+                counts+=1
+                #logging.info(f'doc_count: {doc.count}')
+                #print('doc_id:', doc.doc_id)
                 #print('count:', doc.count)
                 #print('text:', doc.text)
         end = time.time()
+        logging.info(f'doc_count: {counts}')
         logging.info(f'{r} reads : {np.round((end-start)/60,3)}')
         return np.round((end-start)/60,3)
 
@@ -94,7 +100,7 @@ class Exercise1:
         This function plots the time benchmarks of the pattern search for find method and fm index
         """
 
-        reads = [100]#,500,1000,5000,10000]
+        #reads = [100,500,1000] #,5000,10000]
 
         # define figure
         fig = plt.figure(figsize=(18,9))
@@ -105,11 +111,11 @@ class Exercise1:
         width = 0.35  # the width of the bars
 
         ax[0] = fig.add_subplot(gs[0,0])
-        ax[0].bar(x - width/2, self.benchmarks['find'], width, label='Find method')
-        ax[0].bar(x + width/2, self.benchmarks['fm'], width, label='FM index')
-        ax[0].set_ylabel('Time (in minutes)')
+        ax[0].bar(x - width/2, self.benchmarks['find'], width, label='String find method')
+        ax[0].bar(x + width/2, self.benchmarks['fm'], width, label='FM-index')
+        ax[0].set_ylabel('Time (minutes)')
         ax[0].set_title('Time benchmarks')
-        ax[0].set_xticks(x, [str(i) for i in reads])
+        #ax[0].set_xticks(x, [str(i) for i in reads])
         ax[0].legend(loc='best')
         fig.tight_layout()
         plt.savefig(os.path.join(rdir,'time_plot.pdf'),dpi=300,format='pdf')
@@ -120,7 +126,7 @@ class Exercise1:
         """
         This function plots the memory benchmarks of the pattern search for find method and fm index
         """
-        reads = [100]#,500,1000,5000,10000]
+        #reads = [100,500,1000] #,5000,10000]
         
         cmb                 = plt.get_cmap('Blues')                            
         cmb_subsection      = np.linspace(.3,.9,len(reads))                             
@@ -144,7 +150,7 @@ class Exercise1:
             ax[1].plot(np.arange(0,100),color=colorsb[r],label=f'{reads[r]} reads')
         ax[1].set_xlabel('Time (s)')
         ax[1].set_ylabel('Memory consumption (MB)')
-        ax[1].set_title('FM index')
+        ax[1].set_title('FM-index')
         ax[1].legend(loc='best')
 
         fig.tight_layout()
@@ -186,6 +192,7 @@ if __name__ == "__main__":
     # start logging:
     logging.basicConfig(filename=logging_fn, level=logging.DEBUG, format='%(asctime)s %(message)s',
                         datefmt='%d/%m/%Y %H:%M:%S')
+    logging.getLogger('matplotlib.font_manager').disabled = True
 
     # Add basic script information to the logger
     logging.info("------Start Running exercise.py------")
@@ -194,40 +201,41 @@ if __name__ == "__main__":
 
     # ---------Start exercise (simple)-------------------------------
     logging.info("------Start loading chromosome 1 (long string)------")
-    Ex = Exercise1(exercise_string,exercise_pattern)
-    
+    Ex = Exercise1(exercise_string, exercise_pattern)
+
     # exercise parameters and result storage
-    reads = [100]#,500,1000,5000,10000]#, 5000, 10000]
+    #reads = [100]  # ,500,1000,5000,10000]#, 5000, 10000]
     position_results_simple = {}
     memory_results_simple = {}
-    
+
     for r in reads:
         start_simple = time.time()
-        position_results_simple[r] = Ex.find_simple(r) 
+        position_results_simple[r] = Ex.find_simple(r)
         end_simple = time.time()
-        Ex.benchmarks['find'][r]=np.round((end_simple-start_simple)/60,3)
+        Ex.benchmarks['find'][r] = np.round((end_simple - start_simple) / 60, 3)
 
-        memory_results_simple[r] = memory_usage((Ex.find_simple,(r,))) 
+        memory_results_simple[r] = memory_usage((Ex.find_simple, (r,)))
 
-    #    time_simple = (end_simple-start_simple)/60 # time in minutes
-        
-        logging.info(f'For {reads} reads the total running time is {np.round((end_simple-start_simple)/60,3)} minutes')
-    
+        #    time_simple = (end_simple-start_simple)/60 # time in minutes
+
+        logging.info(
+            f'For {reads} reads the total running time is {np.round((end_simple - start_simple) / 60, 3)} minutes')
+
     # save position results
-    with open(os.path.join(rdir,'positions_simplefind_time_results.pickle'), 'wb') as handle:
+    with open(os.path.join(rdir, 'positions_simplefind_time_results.pickle'), 'wb') as handle:
         pickle.dump(position_results_simple, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
     # save memory results
-    with open(os.path.join(rdir,'memory_simplefind_time_results.pickle'), 'wb') as handle:
+    with open(os.path.join(rdir, 'memory_simplefind_time_results.pickle'), 'wb') as handle:
         pickle.dump(memory_results_simple, handle, protocol=pickle.HIGHEST_PROTOCOL)
-    
+
     # ---------Start exercise (complex)------------------------------
-    reads = [100]#,500,1000,5000,10000]
+    #reads = [100,500,1000] #,5000,10000]
     time_results_fm = {}
     memory_results_fm = {}
-    
+
     for r in reads:
-        if r==100:
+        if r==reads[0]:
             Ex.benchmarks['fm'][r] = Ex.search_fm_index(r,True) 
         else:
             Ex.benchmarks['fm'][r] = Ex.search_fm_index(r,False) 
@@ -253,6 +261,8 @@ if __name__ == "__main__":
     logging.info('------Stop logging------')
     logging.info('total running time: %0.2f minutes' % total_time)
     logging.shutdown()
+
+    print(Ex.benchmarks)
 
 
 
